@@ -1,176 +1,263 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>App Energia Incidente - IEEE 1584 + Fronteira de Segurança</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4faff; margin: 0; color: #203060;}
-        h1, h2 { color: #0956c0; }
-        .container { max-width: 900px; margin: 24px auto; background: #fff; border-radius: 16px; padding: 32px; box-shadow: 0 8px 32px #1750a21a;}
-        label { display: block; margin: 16px 0 8px; font-weight: 600;}
-        input, select { padding: 8px; border: 1px solid #aad4ff; border-radius: 6px; width: 100%; box-sizing: border-box;}
-        button { background: #0956c0; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 24px;}
-        button:hover { background: #063a80;}
-        .result { margin: 28px 0 20px; font-size: 1.1em; }
-        .scale-bar { width: 100%; height: 34px; margin: 20px 0; background: linear-gradient(90deg, #e5f8e6 0%, #ffd36b 65%, #ff8484 100%); border-radius: 12px; position: relative;}
-        .scale-indicator { position: absolute; top: -12px; width: 2px; height: 60px; background: #0956c0;}
-        .epi-table { width: 100%; border-collapse: collapse; margin: 24px 0;}
-        .epi-table th, .epi-table td { border: 1px solid #cbe3fa; padding: 8px 10px;}
-        .epi-table th { background: #eaf3ff;}
-        .memorial { background: #f7faff; border-radius: 12px; padding: 18px 24px; margin: 18px 0;}
-        .save-btn { float: right; margin-left: 12px;}
-        .historico { background: #eef7fc; border-radius: 8px; padding: 12px 16px; margin: 14px 0;}
-        .historico-entry { border-bottom: 1px solid #cbe3fa; padding: 6px 0;}
-        .highlight { background: #e0f6ff; padding: 2px 8px; border-radius: 4px;}
-    </style>
+  <meta charset="UTF-8">
+  <title>Energia Incidente - IEEE 1584 + Fronteira de Segurança</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --azul-primario: #0963c8;
+      --azul-secundario: #53aaff;
+      --cinza-claro: #f4faff;
+      --card-bg: #fff;
+      --verde-ok: #23ac2f;
+      --vermelho-alerta: #e65b5b;
+      --amarelo: #ffd36b;
+    }
+    body {
+      margin: 0;
+      background: var(--cinza-claro);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: #203060;
+      min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(90deg, var(--azul-primario) 60%, var(--azul-secundario) 100%);
+      color: #fff;
+      padding: 34px 0 24px 0;
+      text-align: center;
+      border-radius: 0 0 28px 28px;
+      margin-bottom: 32px;
+      box-shadow: 0 8px 32px #1558ad20;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2.3em;
+      font-weight: bold;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+    header .icon {
+      font-size: 1.3em;
+    }
+    .container {
+      max-width: 520px;
+      margin: 0 auto;
+      background: transparent;
+      padding: 0 16px 48px 16px;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 18px;
+      box-shadow: 0 2px 12px #1a5ea522;
+      margin-bottom: 32px;
+      padding: 26px 26px 20px 26px;
+      transition: box-shadow .2s;
+    }
+    label {
+      font-weight: 500;
+      display: block;
+      margin-bottom: 4px;
+      margin-top: 12px;
+    }
+    input, select {
+      width: 100%;
+      padding: 9px;
+      border: 1px solid #aad4ff;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 1.05em;
+      background: #f8fbff;
+      transition: border-color .2s;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--azul-primario);
+      background: #eaf6ff;
+    }
+    button {
+      background: var(--azul-primario);
+      color: #fff;
+      font-weight: 600;
+      font-size: 1.15em;
+      border: none;
+      padding: 13px 0;
+      border-radius: 8px;
+      width: 100%;
+      cursor: pointer;
+      box-shadow: 0 2px 10px #1362c52c;
+      transition: background .2s, box-shadow .2s;
+      margin-top: 14px;
+    }
+    button:hover {
+      background: var(--azul-secundario);
+      box-shadow: 0 4px 20px #1362c54c;
+    }
+    .resultado-bloco {
+      background: linear-gradient(90deg,#eafaff 50%, #d6f8e6 100%);
+      border-left: 8px solid var(--azul-primario);
+      border-radius: 12px;
+      padding: 22px 22px 15px 18px;
+      font-size: 1.18em;
+      margin-top: 10px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 12px #1750a21a;
+      line-height: 1.65;
+      position: relative;
+      z-index: 1;
+    }
+    .escala {
+      width: 100%;
+      height: 26px;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #e5f8e6 0%, #ffd36b 60%, #ff8484 100%);
+      margin: 10px 0 16px 0;
+      position: relative;
+      box-shadow: 0 1px 4px #79c2e922;
+    }
+    .ponteiro {
+      position: absolute;
+      top: -7px;
+      width: 6px;
+      height: 40px;
+      border-radius: 3px;
+      background: var(--azul-primario);
+      left: 0;
+      transition: left .3s cubic-bezier(.4,1,.2,1);
+      z-index: 2;
+    }
+    .escala-label {
+      position: absolute;
+      top: 22px;
+      font-size: .92em;
+      color: #567;
+      opacity: .85;
+    }
+    .escala-label.left { left: 4px; }
+    .escala-label.right { right: 4px; }
+    .memorial details summary {
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1.06em;
+      margin-bottom: 8px;
+      color: var(--azul-primario);
+      outline: none;
+    }
+    .memorial details[open] summary {
+      margin-bottom: 6px;
+    }
+    .memorial details > div {
+      font-size: 0.97em;
+      padding-left: 10px;
+      color: #234;
+    }
+    @media (max-width: 680px) {
+      .container { padding: 0 2vw; }
+      .card { padding: 17px 6vw 14px 6vw;}
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Energia Incidente - IEEE 1584 (2018) + Fronteira de Segurança</h1>
-        <form id="incidentForm">
-            <label>Tensão (V):</label>
-            <input type="number" id="voltage" value="480" required>
-            <label>Corrente de Curto (kA):</label>
-            <input type="number" step="0.01" id="current" value="25" required>
-            <label>Duração do Arco (s):</label>
-            <input type="number" step="0.01" id="duration" value="0.2" required>
-            <label>Distância do trabalhador (mm):</label>
-            <input type="number" id="distance" value="610" required>
-            <label>Classe do equipamento:</label>
-            <select id="equipClass">
-                <option value="low">Baixa tensão &lt; 600V</option>
-                <option value="high">Alta tensão ≥ 600V</option>
-            </select>
-            <button type="button" onclick="calcularEnergia()">Calcular Energia Incidente</button>
-        </form>
-
-        <button type="button" style="margin-left:0;" onclick="calcularFronteira()">Calcular Fronteira de Segurança (1,2 cal/cm²)</button>
-        
-        <!-- Resultado -->
-        <div class="result" id="result"></div>
-        <div id="fronteira"></div>
-        
-        <!-- Escala visual -->
-        <div class="scale-bar" id="scaleBar" style="position: relative;">
-            <div id="indicator" class="scale-indicator" style="left:0"></div>
-            <span style="position:absolute;left:6px;top:36px;font-size:0.9em">0 cal/cm²</span>
-            <span style="position:absolute;right:6px;top:36px;font-size:0.9em">>40 cal/cm²</span>
-        </div>
-        
-        <h2>EPIs Recomendados</h2>
-        <table class="epi-table">
-            <tr><th>Classe de Risco</th><th>Energia Incidente (cal/cm²)</th><th>EPIs Mínimos</th></tr>
-            <tr><td>0</td><td>≤ 1.2</td><td>Calça e camisa de algodão, óculos, protetor auricular</td></tr>
-            <tr><td>1</td><td>&gt; 1.2 a 4</td><td>Calça e camisa retardante a chamas, luvas, capacete com viseira</td></tr>
-            <tr><td>2</td><td>&gt; 4 a 8</td><td>Macacão antichama, proteção facial completa</td></tr>
-            <tr><td>3</td><td>&gt; 8 a 25</td><td>Roupas e acessórios classe 3, luvas isolantes, protetor facial e auditivo</td></tr>
-            <tr><td>4</td><td>&gt; 25 a 40</td><td>Kit completo classe 4, proteção máxima corpo inteiro</td></tr>
-        </table>
-
-        <h2>Memorial de Cálculo</h2>
-        <div class="memorial" id="memorial"></div>
-        
-        <h2>Histórico de Análises</h2>
-        <div class="historico" id="historico"></div>
+  <header>
+    <h1><span class="icon">⚡</span> Energia Incidente IEEE 1584 <span style="font-size:.72em;font-weight:400;">+ Fronteira de Segurança</span></h1>
+  </header>
+  <div class="container">
+    <div class="card">
+      <form id="incidentForm" onsubmit="event.preventDefault();calcularEnergia();">
+        <label for="voltage">Tensão (V):</label>
+        <input type="number" id="voltage" value="480" min="1" required>
+        <label for="current">Corrente de Curto (kA):</label>
+        <input type="number" step="0.01" id="current" value="25" min="0.1" required>
+        <label for="duration">Duração do Arco (s):</label>
+        <input type="number" step="0.01" id="duration" value="0.2" min="0.01" required>
+        <label for="distance">Distância do trabalhador (mm):</label>
+        <input type="number" id="distance" value="610" min="1" required>
+        <label for="equipClass">Classe do equipamento:</label>
+        <select id="equipClass">
+          <option value="low">Baixa tensão &lt; 600V</option>
+          <option value="high">Alta tensão ≥ 600V</option>
+        </select>
+        <button type="submit">Calcular Energia Incidente e Fronteira</button>
+      </form>
     </div>
-    <script>
-        function calcularEnergia() {
-            // Entradas
-            const voltage = parseFloat(document.getElementById('voltage').value);
-            const current = parseFloat(document.getElementById('current').value);
-            const duration = parseFloat(document.getElementById('duration').value);
-            const distance = parseFloat(document.getElementById('distance').value);
+    <div id="bloco-resultado" class="resultado-bloco" style="display:none;">
+      <div id="result"></div>
+      <div id="fronteira"></div>
+      <div class="escala" id="scaleBar" style="position:relative;">
+        <div id="ponteiro" class="ponteiro" style="left:0"></div>
+        <span class="escala-label left">0 cal/cm²</span>
+        <span class="escala-label right">&gt;40 cal/cm²</span>
+      </div>
+    </div>
+    <div class="card memorial">
+      <details id="detalhesMemorial">
+        <summary>Memorial de Cálculo (clique para expandir)</summary>
+        <div id="memorial"></div>
+      </details>
+    </div>
+  </div>
+  <script>
+    function calcularEnergia() {
+      // Entradas
+      const voltage = parseFloat(document.getElementById('voltage').value);
+      const current = parseFloat(document.getElementById('current').value);
+      const duration = parseFloat(document.getElementById('duration').value);
+      const distance = parseFloat(document.getElementById('distance').value);
 
-            // IEEE 1584-2018 simplificado
-            let energia = 0.0093 * current * voltage * duration / Math.pow(distance, 0.65);
+      // IEEE 1584-2018 simplificado (baixa tensão, caixa aberta)
+      let energia = 0.0093 * current * voltage * duration / Math.pow(distance, 0.65);
 
-            // Limite visual (máximo do gráfico)
-            const energiaDisplay = Math.min(energia, 40);
+      // Limite visual
+      const energiaDisplay = Math.min(energia, 40);
 
-            // Determinar classe de risco
-            let classe, epirisco;
-            if (energia <= 1.2) { classe = 0; epirisco = "Básico";}
-            else if (energia <= 4) { classe = 1; epirisco = "Retardante a chamas";}
-            else if (energia <= 8) { classe = 2; epirisco = "Antichama completo";}
-            else if (energia <= 25) { classe = 3; epirisco = "Classe 3 completo";}
-            else if (energia <= 40) { classe = 4; epirisco = "Classe 4 máximo";}
-            else { classe = 5; epirisco = "Zona extrema, evacuar área!";}
+      // Classe de risco e cor
+      let classe, epirisco, corClasse;
+      if (energia <= 1.2) { classe = 0; epirisco = "Básico"; corClasse = "#23ac2f"; }
+      else if (energia <= 4) { classe = 1; epirisco = "Retardante a chamas"; corClasse = "#aad12b";}
+      else if (energia <= 8) { classe = 2; epirisco = "Antichama completo"; corClasse = "#ffb800";}
+      else if (energia <= 25) { classe = 3; epirisco = "Classe 3 completo"; corClasse = "#ff8500";}
+      else if (energia <= 40) { classe = 4; epirisco = "Classe 4 máximo"; corClasse = "#e65b5b";}
+      else { classe = 5; epirisco = "Zona extrema, evacuar área!"; corClasse = "#d12c2c";}
 
-            document.getElementById('result').innerHTML = `
-                <strong>Energia incidente estimada:</strong> <span style="color:#0956c0">${energia.toFixed(2)} cal/cm²</span><br>
-                <strong>Classe de risco:</strong> <span style="color:#${classe>2?'e65b5b':'23ac2f'}"> ${classe}</span><br>
-                <strong>EPI recomendado:</strong> ${epirisco}
-            `;
-            document.getElementById('fronteira').innerHTML = "";
+      // Fronteira de segurança
+      const energiaAlvo = 1.2;
+      let numerador = 0.0093 * current * voltage * duration;
+      let D = Math.pow(numerador / energiaAlvo, 1/0.65);
 
-            // Atualizar escala visual
-            const pos = Math.min(energiaDisplay/40, 1) * 100;
-            document.getElementById('indicator').style.left = `calc(${pos}% - 2px)`;
+      // Exibir resultado
+      document.getElementById('bloco-resultado').style.display = 'block';
+      document.getElementById('result').innerHTML = `
+        <b>Energia incidente estimada:</b> <span style="color:${corClasse}">${energia.toFixed(2)} cal/cm²</span><br>
+        <b>Classe de risco:</b> <span style="color:${corClasse};font-weight:600;font-size:1.08em;">${classe}</span><br>
+        <b>EPI recomendado:</b> ${epirisco}
+      `;
+      document.getElementById('fronteira').innerHTML = `
+        <b>Fronteira de segurança:</b>
+        <span style="color:${corClasse};font-weight:600">${D.toFixed(0)} mm</span>
+        <span style="font-size:.97em;color:#234;opacity:.8;">(${(D/1000).toFixed(2)} m) para 1,2 cal/cm²</span>
+      `;
 
-            // Atualizar memorial de cálculo
-            document.getElementById('memorial').innerHTML = `
-                <b>Parâmetros:</b> Tensão: ${voltage} V, Corrente de Curto: ${current} kA, Duração do Arco: ${duration} s, Distância: ${distance} mm.<br>
-                <b>Fórmula base:</b> EI = 0.0093 × Icc × V × t / D^0.65<br>
-                <b>Energia incidente:</b> <span style="color:#0956c0">${energia.toFixed(2)} cal/cm²</span>
-            `;
-        }
+      // Escala visual
+      const pos = Math.min(energiaDisplay/40, 1) * 100;
+      document.getElementById('ponteiro').style.left = `calc(${pos}% - 3px)`;
 
-        // Calcular fronteira de segurança (Flash Protection Boundary)
-        function calcularFronteira() {
-            const voltage = parseFloat(document.getElementById('voltage').value);
-            const current = parseFloat(document.getElementById('current').value);
-            const duration = parseFloat(document.getElementById('duration').value);
-            // Energia alvo: 1,2 cal/cm² (limite de queimadura 2º grau)
-            const energiaAlvo = 1.2;
-
-            // D = [0.0093 × Icc × V × t / EI]^(1/0.65)
-            let numerador = 0.0093 * current * voltage * duration;
-            let D = Math.pow(numerador / energiaAlvo, 1/0.65);
-
-            document.getElementById('fronteira').innerHTML = `
-                <div class="highlight">
-                    <b>Fronteira de segurança:</b> <span style="color:#0956c0">${D.toFixed(0)} mm</span> 
-                    (${(D/1000).toFixed(2)} m) para 1,2 cal/cm²<br>
-                    <small>Esta é a distância mínima recomendada para delimitação de áreas de acesso seguro durante o trabalho (IEEE 1584-2018).</small>
-                </div>
-            `;
-        }
-
-        // Salvar análise
-        function salvarAnalise() {
-            const resultDiv = document.getElementById('result').innerText || '';
-            const memorialDiv = document.getElementById('memorial').innerText || '';
-            const fronteiraDiv = document.getElementById('fronteira').innerText || '';
-            const historico = JSON.parse(localStorage.getItem('historicoAnaliseEI') || "[]");
-            const entry = {
-                data: new Date().toLocaleString(),
-                resultado: resultDiv,
-                memorial: memorialDiv,
-                fronteira: fronteiraDiv
-            };
-            historico.unshift(entry);
-            localStorage.setItem('historicoAnaliseEI', JSON.stringify(historico.slice(0,15)));
-            exibirHistorico();
-            alert("Análise salva no histórico local!");
-        }
-
-        function exibirHistorico() {
-            const historico = JSON.parse(localStorage.getItem('historicoAnaliseEI') || "[]");
-            const div = document.getElementById('historico');
-            if (historico.length === 0) {
-                div.innerHTML = "<em>Nenhuma análise salva ainda.</em>";
-                return;
-            }
-            div.innerHTML = historico.map(h=>
-                `<div class='historico-entry'>
-                    <b>${h.data}:</b><br>${h.resultado}<br>${h.fronteira}
-                    <details><summary>Memorial</summary><pre style="font-size:0.95em">${h.memorial}</pre></details>
-                </div>`
-            ).join("");
-        }
-
-        window.onload = exibirHistorico;
-    </script>
+      // Memorial técnico
+      document.getElementById('memorial').innerHTML = `
+        <b>Entradas:</b><br>
+        - Tensão: ${voltage} V<br>
+        - Corrente de Curto: ${current} kA<br>
+        - Duração do Arco: ${duration} s<br>
+        - Distância do trabalhador: ${distance} mm<br><br>
+        <b>Fórmula base:</b><br>
+        EI = 0.0093 × Icc × V × t / D<sup>0.65</sup><br>
+        <b>Energia incidente:</b> ${energia.toFixed(2)} cal/cm²<br>
+        <b>Classe de risco:</b> ${classe} (${epirisco})<br><br>
+        <b>Fronteira de Segurança:</b> D = [0.0093 × Icc × V × t / 1,2]<sup>1/0,65</sup> = <b>${D.toFixed(0)} mm</b> (${(D/1000).toFixed(2)} m)<br>
+        <span style="font-size:.93em;color:#567;opacity:.8;">Distância mínima recomendada para delimitação de área segura (IEEE 1584-2018).</span>
+      `;
+    }
+  </script>
 </body>
 </html>
