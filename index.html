@@ -1,213 +1,195 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Calculadora de Energia Incidente</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <meta charset="UTF-8">
+    <title>App Energia Incidente - IEEE 1584 + Barreiras</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4faff; margin: 0; color: #203060;}
+        h1, h2 { color: #0956c0; }
+        .container { max-width: 900px; margin: 24px auto; background: #fff; border-radius: 16px; padding: 32px; box-shadow: 0 8px 32px #1750a21a;}
+        label { display: block; margin: 16px 0 8px; font-weight: 600;}
+        input, select { padding: 8px; border: 1px solid #aad4ff; border-radius: 6px; width: 100%; box-sizing: border-box;}
+        button { background: #0956c0; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 24px;}
+        button:hover { background: #063a80;}
+        .barriers-list { display: flex; gap: 32px; margin-bottom: 20px;}
+        .barrier { background: #eaf3ff; border-radius: 12px; padding: 18px; flex: 1;}
+        .barrier input { margin-right: 8px; }
+        .result { margin: 28px 0 20px; font-size: 1.1em; }
+        .scale-bar { width: 100%; height: 34px; margin: 20px 0; background: linear-gradient(90deg, #e5f8e6 0%, #ffd36b 65%, #ff8484 100%); border-radius: 12px; position: relative;}
+        .scale-indicator { position: absolute; top: -12px; width: 2px; height: 60px; background: #0956c0;}
+        .epi-table { width: 100%; border-collapse: collapse; margin: 24px 0;}
+        .epi-table th, .epi-table td { border: 1px solid #cbe3fa; padding: 8px 10px;}
+        .epi-table th { background: #eaf3ff;}
+        .memorial { background: #f7faff; border-radius: 12px; padding: 18px 24px; margin: 18px 0;}
+        .save-btn { float: right; margin-left: 12px;}
+        .historico { background: #eef7fc; border-radius: 8px; padding: 12px 16px; margin: 14px 0;}
+        .historico-entry { border-bottom: 1px solid #cbe3fa; padding: 6px 0;}
+    </style>
 </head>
-<body class="bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 min-h-screen text-white p-4">
-  <div class="max-w-5xl mx-auto">
-    <h1 class="text-4xl font-bold text-center mb-6">Calculadora de Energia Incidente (IEEE 1584-2018)</h1>
+<body>
+    <div class="container">
+        <h1>Energia Incidente - IEEE 1584 (2018) + Barreiras</h1>
+        <form id="incidentForm">
+            <label>Tensão (V):</label>
+            <input type="number" id="voltage" value="480" required>
+            <label>Corrente de Curto (kA):</label>
+            <input type="number" step="0.01" id="current" value="25" required>
+            <label>Duração do Arco (s):</label>
+            <input type="number" step="0.01" id="duration" value="0.2" required>
+            <label>Distância do trabalhador (mm):</label>
+            <input type="number" id="distance" value="610" required>
+            <label>Classe do equipamento:</label>
+            <select id="equipClass">
+                <option value="low">Baixa tensão &lt; 600V</option>
+                <option value="high">Alta tensão ≥ 600V</option>
+            </select>
+            <button type="button" onclick="calcularEnergia()">Calcular Energia Incidente</button>
+        </form>
+        
+        <!-- Barreiras -->
+        <h2>Barreiras de Segurança</h2>
+        <div class="barriers-list">
+            <div class="barrier">
+                <h3>Preventivas</h3>
+                <label><input type="checkbox" class="barreira" value="0.6" data-type="preventiva"> Sistema de Detecção de Arco</label>
+                <label><input type="checkbox" class="barreira" value="0.5" data-type="preventiva"> Seccionamento Rápido</label>
+                <label><input type="checkbox" class="barreira" value="0.7" data-type="preventiva"> Blindagem de Painéis</label>
+                <label><input type="checkbox" class="barreira" value="0.85" data-type="preventiva"> Análise de Rotina (APR/JSA)</label>
+            </div>
+            <div class="barrier">
+                <h3>Mitigatórias</h3>
+                <label><input type="checkbox" class="barreira" value="0.65" data-type="mitigatoria"> Uso de EPI Adequado</label>
+                <label><input type="checkbox" class="barreira" value="0.7" data-type="mitigatoria"> Sinalização e Isolamento</label>
+                <label><input type="checkbox" class="barreira" value="0.8" data-type="mitigatoria"> Plano de Resposta à Emergência</label>
+            </div>
+        </div>
+        
+        <button type="button" class="save-btn" onclick="salvarAnalise()">Salvar Análise</button>
+        
+        <!-- Resultado -->
+        <div class="result" id="result"></div>
+        <!-- Escala visual -->
+        <div class="scale-bar" id="scaleBar" style="position: relative;">
+            <div id="indicator" class="scale-indicator" style="left:0"></div>
+            <span style="position:absolute;left:6px;top:36px;font-size:0.9em">0 cal/cm²</span>
+            <span style="position:absolute;right:6px;top:36px;font-size:0.9em">>40 cal/cm²</span>
+        </div>
+        
+        <h2>EPIs Recomendados</h2>
+        <table class="epi-table">
+            <tr><th>Classe de Risco</th><th>Energia Incidente (cal/cm²)</th><th>EPIs Mínimos</th></tr>
+            <tr><td>0</td><td>≤ 1.2</td><td>Calça e camisa de algodão, óculos, protetor auricular</td></tr>
+            <tr><td>1</td><td>&gt; 1.2 a 4</td><td>Calça e camisa retardante a chamas, luvas, capacete com viseira</td></tr>
+            <tr><td>2</td><td>&gt; 4 a 8</td><td>Macacão antichama, proteção facial completa</td></tr>
+            <tr><td>3</td><td>&gt; 8 a 25</td><td>Roupas e acessórios classe 3, luvas isolantes, protetor facial e auditivo</td></tr>
+            <tr><td>4</td><td>&gt; 25 a 40</td><td>Kit completo classe 4, proteção máxima corpo inteiro</td></tr>
+        </table>
 
-    <!-- Escala visual -->
-    <div class="mb-6">
-      <h2 class="text-xl font-bold mb-2">Escala de Risco (cal/cm²)</h2>
-      <div class="relative h-8 w-full bg-gradient-to-r from-green-500 via-yellow-400 to-red-600 rounded overflow-hidden">
-        <div id="marcador" class="absolute top-0 left-0 w-1 h-8 bg-white"></div>
-      </div>
-      <div class="flex justify-between text-sm text-white/80 mt-1">
-        <span>0</span>
-        <span>1.2</span>
-        <span>4</span>
-        <span>8</span>
-        <span>25</span>
-        <span>40+</span>
-      </div>
+        <h2>Memorial de Cálculo</h2>
+        <div class="memorial" id="memorial"></div>
+        
+        <h2>Histórico de Análises</h2>
+        <div class="historico" id="historico"></div>
     </div>
+    <script>
+        function calcularEnergia() {
+            // Entradas
+            const voltage = parseFloat(document.getElementById('voltage').value);
+            const current = parseFloat(document.getElementById('current').value);
+            const duration = parseFloat(document.getElementById('duration').value);
+            const distance = parseFloat(document.getElementById('distance').value);
+            const equipClass = document.getElementById('equipClass').value;
 
-    <div class="grid gap-6 md:grid-cols-2">
-      <!-- Inputs -->
-      <div class="space-y-4">
-        <label class="block">Tensão (V)
-          <input type="number" id="tensao" placeholder="Ex: 480, 4160, 13800" class="w-full p-2 rounded bg-white/10 border border-white/20 placeholder-white/60"/>
-        </label>
-        <label class="block">Corrente de Curto (A)
-          <input type="number" id="corrente" placeholder="Ex: 10000, 25000" class="w-full p-2 rounded bg-white/10 border border-white/20 placeholder-white/60"/>
-        </label>
-        <label class="block">Tempo de Arco (s)
-          <input type="number" step="0.01" id="tempo" placeholder="Ex: 0.2, 0.5, 1.0" class="w-full p-2 rounded bg-white/10 border border-white/20 placeholder-white/60"/>
-        </label>
-        <label class="block">Distância (mm)
-          <input type="number" id="distancia" placeholder="Ex: 610, 910, 1220" class="w-full p-2 rounded bg-white/10 border border-white/20 placeholder-white/60"/>
-        </label>
-        <label class="block">Gap entre Condutores (mm)
-          <input type="number" id="gap" placeholder="Ex: 25, 32, 76" class="w-full p-2 rounded bg-white/10 border border-white/20 placeholder-white/60"/>
-        </label>
-        <label class="block">Configuração
-          <select id="configuracao" class="w-full p-2 rounded bg-white/10 border border-white/20 text-white">
-            <option value="vcb" class="text-black">VCB (Vertical in Box)</option>
-            <option value="hcb" class="text-black">HCB (Horizontal in Box)</option>
-            <option value="voa" class="text-black">VOA (Vertical Open Air)</option>
-            <option value="hoa" class="text-black">HOA (Horizontal Open Air)</option>
-          </select>
-        </label>
-        <button onclick="calcular()" class="w-full bg-yellow-500 hover:bg-yellow-600 text-black font-bold p-2 rounded">Calcular (IEEE)</button>
-        <button onclick="calcularRalphLee()" class="w-full bg-orange-400 hover:bg-orange-500 text-black font-bold p-2 rounded">Calcular (Ralph Lee)</button>
-        <button onclick="exportarPDF()" class="w-full mt-2 bg-green-500 hover:bg-green-600 text-black font-bold p-2 rounded">Exportar PDF (com Memorial)</button>
-      </div>
+            // Barreiras selecionadas (multiplicam no final, efeito cumulativo)
+            const barreiras = Array.from(document.querySelectorAll('.barreira:checked')).map(b=>parseFloat(b.value));
+            let fatorBarreiras = 1.0;
+            if (barreiras.length > 0) {
+                fatorBarreiras = barreiras.reduce((a,b)=>a*b,1);
+            }
 
-      <!-- Resultados -->
-      <div id="resultado" class="bg-white/10 p-4 rounded border border-white/20">
-        <h2 class="text-2xl font-bold mb-4">Resultado</h2>
-        <div id="output" class="space-y-2 text-white"></div>
+            // IEEE 1584-2018 simplificado para fins de app (versão real depende de vários fatores)
+            // Fórmula base simplificada para baixa tensão, caixa aberta:
+            let energia = 0.0093 * current * voltage * duration / Math.pow(distance, 0.65);
+            // Ajuste por barreiras:
+            const energiaComBarreiras = energia * fatorBarreiras;
 
-        <h3 class="text-xl mt-6 font-bold">EPI Recomendado</h3>
-        <ul id="epis" class="text-sm text-white/80 list-disc pl-4 mt-2"></ul>
+            // Limite visual (máximo do gráfico)
+            const energiaDisplay = Math.min(energiaComBarreiras, 40);
 
-        <h3 class="text-xl mt-6 font-bold">Histórico</h3>
-        <ul id="historico" class="text-sm text-white/80 list-disc pl-4 mt-2"></ul>
-      </div>
-    </div>
-<script>
-  function calcular() {
-    const V = parseFloat(document.getElementById("tensao").value);
-    const I = parseFloat(document.getElementById("corrente").value);
-    const t = parseFloat(document.getElementById("tempo").value);
-    const D = parseFloat(document.getElementById("distancia").value);
-    const G = parseFloat(document.getElementById("gap").value);
-    const config = document.getElementById("configuracao").value;
+            // Determinar classe de risco
+            let classe, epirisco;
+            if (energiaComBarreiras <= 1.2) { classe = 0; epirisco = "Básico";}
+            else if (energiaComBarreiras <= 4) { classe = 1; epirisco = "Retardante a chamas";}
+            else if (energiaComBarreiras <= 8) { classe = 2; epirisco = "Antichama completo";}
+            else if (energiaComBarreiras <= 25) { classe = 3; epirisco = "Classe 3 completo";}
+            else if (energiaComBarreiras <= 40) { classe = 4; epirisco = "Classe 4 máximo";}
+            else { classe = 5; epirisco = "Zona extrema, evacuar área!";}
 
-    if (!V || !I || !t || !D || !G) {
-      alert("Preencha todos os campos com valores válidos.");
-      return;
-    }
+            // Descrever barreiras aplicadas
+            let barreirasTexto = "";
+            if (barreiras.length > 0) {
+                barreirasTexto = "<strong>Barreiras aplicadas:</strong> " +
+                    Array.from(document.querySelectorAll('.barreira:checked')).map(b=>b.parentElement.innerText.trim()).join("; ");
+            } else {
+                barreirasTexto = "<em>Nenhuma barreira selecionada.</em>";
+            }
 
-    const Vkv = V / 1000;
-    const Ika = I / 1000;
-    const Dm = D / 1000;
+            // Exibir resultados
+            document.getElementById('result').innerHTML = `
+                <strong>Energia incidente estimada:</strong> <span style="color:#0956c0">${energiaComBarreiras.toFixed(2)} cal/cm²</span><br>
+                <strong>Classe de risco:</strong> <span style="color:#${classe>2?'e65b5b':'23ac2f'}"> ${classe}</span><br>
+                <strong>EPI recomendado:</strong> ${epirisco}<br>
+                ${barreirasTexto}
+            `;
+            // Atualizar escala visual
+            const pos = Math.min(energiaDisplay/40, 1) * 100; // 0 a 100%
+            document.getElementById('indicator').style.left = `calc(${pos}% - 2px)`;
 
-    const coef = {
-      vcb: { k1: 0.973, k2: 1.0, x: 0.662, y: 0.954, z: 2.0 },
-      hcb: { k1: 1.000, k2: 1.0, x: 0.662, y: 0.954, z: 2.0 },
-      voa: { k1: 1.081, k2: 1.0, x: 0.662, y: 0.954, z: 2.0 },
-      hoa: { k1: 1.116, k2: 1.0, x: 0.662, y: 0.954, z: 2.0 }
-    };
+            // Atualizar memorial de cálculo
+            document.getElementById('memorial').innerHTML = `
+                <b>Parâmetros:</b> Tensão: ${voltage} V, Corrente de Curto: ${current} kA, Duração do Arco: ${duration} s, Distância: ${distance} mm.<br>
+                <b>Fórmula base:</b> EI = 0.0093 x Icc x V x t / D^0.65<br>
+                <b>Energia sem barreiras:</b> ${energia.toFixed(2)} cal/cm²<br>
+                <b>Fator de barreiras aplicado:</b> ${fatorBarreiras.toFixed(3)}<br>
+                <b>Energia incidente final:</b> <span style="color:#0956c0">${energiaComBarreiras.toFixed(2)} cal/cm²</span><br>
+                <b>Barreiras:</b> ${barreirasTexto}
+            `;
+        }
 
-    const { k1, k2, x, y, z } = coef[config];
-    const Cf = 1.0;
+        // Salvar análise
+        function salvarAnalise() {
+            const resultDiv = document.getElementById('result').innerText || '';
+            const memorialDiv = document.getElementById('memorial').innerText || '';
+            const historico = JSON.parse(localStorage.getItem('historicoAnaliseEI') || "[]");
+            const entry = {
+                data: new Date().toLocaleString(),
+                resultado: resultDiv,
+                memorial: memorialDiv
+            };
+            historico.unshift(entry);
+            localStorage.setItem('historicoAnaliseEI', JSON.stringify(historico.slice(0,15)));
+            exibirHistorico();
+            alert("Análise salva no histórico local!");
+        }
 
-    const logIarc = -0.153 + 0.662 * Math.log10(Ika) + 0.0966 * Vkv + 0.000526 * G + 0.5588 * Vkv * Math.log10(Ika) - 0.00304 * G * Math.log10(Ika);
-    const Iarc = Math.pow(10, logIarc);
-    const E = 4.184 * Cf * k1 * k2 * Math.pow(Iarc, x) * Math.pow(t, y) * Math.pow(Dm, -z);
+        function exibirHistorico() {
+            const historico = JSON.parse(localStorage.getItem('historicoAnaliseEI') || "[]");
+            const div = document.getElementById('historico');
+            if (historico.length === 0) {
+                div.innerHTML = "<em>Nenhuma análise salva ainda.</em>";
+                return;
+            }
+            div.innerHTML = historico.map(h=>
+                `<div class='historico-entry'>
+                    <b>${h.data}:</b><br>${h.resultado}<br>
+                    <details><summary>Memorial</summary><pre style="font-size:0.95em">${h.memorial}</pre></details>
+                </div>`
+            ).join("");
+        }
 
-    mostrarResultado(E, Iarc, "IEEE 1584-2018", V, I, t, D, config);
-  }
-
-  function calcularRalphLee() {
-    const I = parseFloat(document.getElementById("corrente").value);
-    const t = parseFloat(document.getElementById("tempo").value);
-    const D = parseFloat(document.getElementById("distancia").value);
-
-    if (!I || !t || !D) {
-      alert("Preencha corrente, tempo e distância.");
-      return;
-    }
-
-    const E = 0.01 * I * t / Math.pow(D, 1.473);
-    mostrarResultado(E, I, "Ralph Lee (1987)", null, I, t, D, null);
-  }
-
-  function mostrarResultado(E, Iarc, metodo, V, I, t, D, config) {
-    let categoria = "";
-    if (E < 1.2) categoria = "Categoria 0";
-    else if (E < 4) categoria = "Categoria 1";
-    else if (E < 8) categoria = "Categoria 2";
-    else if (E < 25) categoria = "Categoria 3";
-    else if (E < 40) categoria = "Categoria 4";
-    else categoria = "PERIGO EXTREMO";
-
-    // Atualiza marcador visual
-    const escala = document.querySelector(".w-full.bg-gradient-to-r");
-    const largura = escala.clientWidth;
-    let pos = Math.min(E / 45, 1) * largura;
-    document.getElementById("marcador").style.left = pos + "px";
-
-    // Exibe resultado
-    document.getElementById("output").innerHTML = `
-      <p><strong>Método:</strong> ${metodo}</p>
-      <p><strong>Energia Incidente:</strong> ${E.toFixed(2)} cal/cm²</p>
-      <p><strong>Corrente de Arco:</strong> ${Iarc.toFixed(2)} ${metodo.includes("Ralph") ? "A" : "kA"}</p>
-      <p><strong>Categoria de EPI:</strong> ${categoria}</p>
-    `;
-
-    // EPIs recomendados
-    const epis = {
-      "Categoria 0": ["Roupas normais de trabalho", "Óculos de segurança"],
-      "Categoria 1": ["Camisa/calça FR", "Óculos de proteção", "Luvas isolantes"],
-      "Categoria 2": ["Camisa/calça FR", "Protetor facial com AR", "Luvas"],
-      "Categoria 3": ["Conjunto FR completo", "Protetor facial + AR", "Capuz balaclava", "Luvas"],
-      "Categoria 4": ["FR multicamadas", "Capacete AR", "Protetor facial", "Luvas"],
-      "PERIGO EXTREMO": ["Desenergizar o equipamento antes de intervir"]
-    };
-
-    document.getElementById("epis").innerHTML =
-      epis[categoria].map(e => `<li>${e}</li>`).join("");
-
-    salvarHistorico({ V, I, t, D, E: E.toFixed(2), categoria, metodo });
-  }
-
-  function salvarHistorico(item) {
-    const historico = JSON.parse(localStorage.getItem("historicoEPI")) || [];
-    historico.unshift(item);
-    localStorage.setItem("historicoEPI", JSON.stringify(historico.slice(0, 5)));
-    mostrarHistorico();
-  }
-
-  function mostrarHistorico() {
-    const historico = JSON.parse(localStorage.getItem("historicoEPI")) || [];
-    const lista = historico.map(h =>
-      `<li>${h.metodo}: ${h.E} cal/cm² (${h.categoria})</li>`
-    ).join("");
-    document.getElementById("historico").innerHTML = lista;
-  }
-
-  function exportarPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text("Memorial de Cálculo - Energia Incidente", 20, 20);
-    doc.setFontSize(12);
-
-    const tensao = document.getElementById("tensao").value;
-    const corrente = document.getElementById("corrente").value;
-    const tempo = document.getElementById("tempo").value;
-    const distancia = document.getElementById("distancia").value;
-    const gap = document.getElementById("gap").value;
-    const config = document.getElementById("configuracao").selectedOptions[0].text;
-
-    const outputText = document.getElementById("output").innerText;
-
-    const texto = `
-Dados de Entrada:
-- Tensão: ${tensao} V
-- Corrente: ${corrente} A
-- Tempo de arco: ${tempo} s
-- Distância: ${distancia} mm
-- Gap: ${gap} mm
-- Configuração: ${config}
-
-Resultado:
-${outputText}
-`;
-
-    const linhas = doc.splitTextToSize(texto, 170);
-    doc.text(linhas, 20, 40);
-    doc.save("memorial_energia_incidente.pdf");
-  }
-
-  mostrarHistorico();
-</script>
+        // Carregar histórico ao abrir
+        window.onload = exibirHistorico;
+    </script>
 </body>
 </html>
