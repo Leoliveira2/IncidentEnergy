@@ -1,186 +1,407 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Cálculo de Energia Incidente e Fronteira de Segurança</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body {
-            background: #f3f8fc;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            margin: 0; padding: 0;
-            display: flex; flex-direction: column; align-items: center;
-            min-height: 100vh;
-        }
-        .container {
-            background: #fff;
-            border-radius: 20px;
-            box-shadow: 0 4px 16px #0001;
-            max-width: 400px;
-            width: 90vw;
-            margin: 32px auto;
-            padding: 24px 18px 32px 18px;
-        }
-        h2 {
-            color: #276fbf;
-            text-align: center;
-        }
-        label {
-            display: block;
-            margin-top: 12px;
-            color: #276fbf;
-            font-weight: 500;
-        }
-        input[type=number] {
-            width: 100%;
-            padding: 8px 10px;
-            margin-top: 4px;
-            border: 1px solid #b5d0ea;
-            border-radius: 8px;
-            font-size: 1rem;
-        }
-        button {
-            background: #276fbf;
-            color: #fff;
-            padding: 12px 0;
-            border: none;
-            border-radius: 12px;
-            margin-top: 22px;
-            width: 100%;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.18s;
-        }
-        button:hover {
-            background: #1d599b;
-        }
-        .result {
-            margin-top: 28px;
-            padding: 16px;
-            border-radius: 16px;
-            background: #eaf4fd;
-            font-size: 1.12rem;
-            color: #1a355d;
-            box-shadow: 0 2px 8px #aac9ef3b;
-        }
-        .fronteira {
-            margin-top: 18px;
-            background: #ffd966;
-            border-left: 8px solid #ffbc2a;
-            color: #6a4400;
-            font-size: 1.22rem;
-            font-weight: bold;
-            padding: 18px 16px;
-            border-radius: 14px;
-            box-shadow: 0 2px 8px #ffe6b25a;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        .fronteira svg {
-            flex-shrink: 0;
-        }
-        @media (max-width: 500px) {
-            .container {
-                padding: 12px 4vw 24px 4vw;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calculadora de Energia Incidente IEEE 1584-2018</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{
+      font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+      background:linear-gradient(135deg,#1e3c72,#2a5298,#3b6fbf);
+      min-height:100vh;padding:20px;color:#fff
+    }
+    .container{max-width:1400px;margin:0 auto}
+    .header{text-align:center;margin-bottom:40px}
+    .header h1{font-size:3rem;font-weight:700;margin-bottom:10px;text-shadow:2px 2px 4px rgba(0,0,0,.3)}
+    .header .subtitle{font-size:1.2rem;color:rgba(255,255,255,.8);margin-bottom:20px}
+    .icon{font-size:3rem;margin-bottom:20px}
+    .main-grid{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-bottom:30px}
+    @media (max-width:768px){.main-grid{grid-template-columns:1fr}}
+    .panel{background:rgba(255,255,255,.1);backdrop-filter:blur(10px);border-radius:20px;padding:30px;border:1px solid rgba(255,255,255,.2);box-shadow:0 8px 32px rgba(0,0,0,.1)}
+    .panel-header{display:flex;align-items:center;gap:10px;margin-bottom:25px}
+    .panel-header h2{font-size:1.8rem;font-weight:600}
+    .form-group{margin-bottom:20px}
+    .form-group label{display:block;font-weight:600;margin-bottom:8px;font-size:1rem}
+    .form-control{
+      width:100%;padding:12px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.3);
+      background:rgba(255,255,255,.2);color:#fff;font-size:1rem;transition:.3s
+    }
+    .form-control:focus{outline:none;border-color:#ffd700;box-shadow:0 0 10px rgba(255,215,0,.3)}
+    .form-control::placeholder{color:rgba(255,255,255,.7)}
+    .btn-group{display:flex;gap:15px;margin-top:25px}
+    .btn{flex:1;padding:15px 25px;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;transition:.3s;display:flex;align-items:center;justify-content:center;gap:8px}
+    .btn-primary{background:linear-gradient(135deg,#ffd700,#ff8c00);color:#fff}
+    .btn-primary:hover{background:linear-gradient(135deg,#ffed4a,#ff7300);transform:translateY(-2px);box-shadow:0 8px 20px rgba(255,140,0,.3)}
+    .btn-secondary{background:rgba(255,255,255,.2);color:#fff}
+    .btn-secondary:hover{background:rgba(255,255,255,.3)}
+    .result-main{background:linear-gradient(135deg,rgba(220,20,60,.2),rgba(255,69,0,.2));border-radius:15px;padding:30px;text-align:center;margin-bottom:25px;border:1px solid rgba(255,69,0,.3)}
+    .result-value{font-size:2.5rem;font-weight:700;margin-bottom:10px}
+    .result-label{font-size:1.1rem;color:rgba(255,255,255,.8)}
+    .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:25px}
+    .result-item{background:rgba(255,255,255,.1);border-radius:10px;padding:20px;border:1px solid rgba(255,255,255,.2)}
+    .result-item-label{font-size:.9rem;color:rgba(255,255,255,.7);margin-bottom:5px}
+    .result-item-value{font-size:1.4rem;font-weight:700}
+    .epi-section{background:linear-gradient(135deg,rgba(34,139,34,.2),rgba(0,100,0,.2));border-radius:15px;padding:25px;border:1px solid rgba(34,139,34,.3)}
+    .epi-header{display:flex;align-items:center;gap:10px;margin-bottom:15px}
+    .epi-description{font-size:1.1rem;font-weight:600}
+    .warning-section{background:linear-gradient(135deg,rgba(255,0,0,.2),rgba(139,0,0,.2));border-radius:15px;padding:25px;border:2px solid rgba(255,0,0,.5);margin-top:20px}
+    .warning-header{display:flex;align-items:center;gap:10px;margin-bottom:15px;color:#ffcccb}
+    .empty-state{text-align:center;padding:60px 20px;color:rgba(255,255,255,.6)}
+    .empty-state-icon{font-size:4rem;margin-bottom:20px}
+    .info-section{background:rgba(255,255,255,.05);backdrop-filter:blur(5px);border-radius:20px;padding:30px;border:1px solid rgba(255,255,255,.1)}
+    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:20px}
+    @media (max-width:768px){.info-grid{grid-template-columns:1fr}.result-grid{grid-template-columns:1fr}}
+    .info-column h4{font-weight:600;margin-bottom:15px;color:#fff}
+    .info-column ul{list-style:none;font-size:.9rem;color:rgba(255,255,255,.8)}
+    .info-column li{margin-bottom:8px;padding-left:15px;position:relative}
+    .info-column li::before{content:"•";position:absolute;left:0;color:#ffd700}
+    .calculation-details{background:rgba(255,255,255,.05);border-radius:10px;padding:20px;margin-top:20px;border:1px solid rgba(255,255,255,.1)}
+    .calculation-step{margin-bottom:15px;padding:10px;background:rgba(255,255,255,.05);border-radius:8px;font-family:'Courier New',monospace;font-size:.9rem}
+    .formula{background:rgba(0,0,0,.2);padding:10px;border-radius:5px;margin:10px 0;font-family:'Courier New',monospace;border-left:3px solid #ffd700}
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Energia Incidente & Fronteira de Segurança</h2>
-        <form id="form">
-            <label for="cf">CF (constante de conversão):</label>
-            <input type="number" id="cf" value="1" step="0.01" required>
-
-            <label for="k1">k₁ (fator):</label>
-            <input type="number" id="k1" value="1" step="0.01" required>
-
-            <label for="k2">k₂ (fator):</label>
-            <input type="number" id="k2" value="1" step="0.01" required>
-
-            <label for="k3">k₃ (fator):</label>
-            <input type="number" id="k3" value="1" step="0.01" required>
-
-            <label for="v">Tensão (V):</label>
-            <input type="number" id="v" value="480" step="1" required>
-
-            <label for="x">Expoente x:</label>
-            <input type="number" id="x" value="1" step="0.01" required>
-
-            <label for="ia">Corrente de Arco (Ia, kA):</label>
-            <input type="number" id="ia" value="25" step="0.01" required>
-
-            <label for="y">Expoente y:</label>
-            <input type="number" id="y" value="1" step="0.01" required>
-
-            <label for="d">Distância ao arco (cm):</label>
-            <input type="number" id="d" value="60" step="1" required>
-
-            <label for="z">Expoente z:</label>
-            <input type="number" id="z" value="2" step="0.01" required>
-
-            <button type="submit">Calcular</button>
-        </form>
-        <div id="resultados"></div>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="icon">⚡</div>
+      <h1>Calculadora de Energia Incidente</h1>
+      <p class="subtitle">Cálculo conforme IEEE 1584-2018 — com Fronteira de Segurança (1,2 cal/cm²)</p>
     </div>
 
-    <script>
-        function calcularEnergiaIncidente(params) {
-            // E = (CF * k1 * k2 * k3 * V^x * Ia^y) / D^z
-            const numerador = params.cf * params.k1 * params.k2 * params.k3 * Math.pow(params.v, params.x) * Math.pow(params.ia, params.y);
-            const denominador = Math.pow(params.d, params.z);
-            return numerador / denominador;
-        }
+    <div class="main-grid">
+      <!-- Painel de Entrada -->
+      <div class="panel">
+        <div class="panel-header">
+          <span style="font-size:1.5rem">🧮</span><h2>Dados de Entrada</h2>
+        </div>
 
-        function calcularFronteiraSeguranca(params) {
-            // Resolve para D quando E = 1.2 cal/cm²
-            const E = 1.2;
-            const numerador = params.cf * params.k1 * params.k2 * params.k3 * Math.pow(params.v, params.x) * Math.pow(params.ia, params.y);
-            const D = Math.pow(numerador / E, 1 / params.z);
-            return D; // em cm (mesma unidade de entrada)
-        }
+        <div class="form-group">
+          <label for="tensao">Tensão do Sistema (V)</label>
+          <input type="number" id="tensao" class="form-control" placeholder="Ex: 480, 4160, 13800">
+        </div>
 
-        document.getElementById('form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const params = {
-                cf: parseFloat(document.getElementById('cf').value),
-                k1: parseFloat(document.getElementById('k1').value),
-                k2: parseFloat(document.getElementById('k2').value),
-                k3: parseFloat(document.getElementById('k3').value),
-                v: parseFloat(document.getElementById('v').value),
-                x: parseFloat(document.getElementById('x').value),
-                ia: parseFloat(document.getElementById('ia').value),
-                y: parseFloat(document.getElementById('y').value),
-                d: parseFloat(document.getElementById('d').value),
-                z: parseFloat(document.getElementById('z').value),
-            };
+        <div class="form-group">
+          <label for="corrente">Corrente de Curto-Circuito (A)</label>
+          <input type="number" id="corrente" class="form-control" placeholder="Ex: 10000, 25000">
+        </div>
 
-            const energia = calcularEnergiaIncidente(params);
-            const fronteira = calcularFronteiraSeguranca(params);
+        <div class="form-group">
+          <label for="tempo">Tempo de Arco (s)</label>
+          <input type="number" id="tempo" step="0.001" class="form-control" placeholder="Ex: 0.2, 0.5, 1.0">
+        </div>
 
-            // Converter para metros para facilitar leitura (fronteira)
-            const fronteira_m = fronteira / 100;
+        <div class="form-group">
+          <label for="distancia">Distância de Trabalho (mm)</label>
+          <input type="number" id="distancia" class="form-control" placeholder="Ex: 610, 910, 1220">
+        </div>
 
-            document.getElementById('resultados').innerHTML = `
-                <div class="result">
-                    <b>Energia Incidente:</b> ${energia.toFixed(2)} cal/cm² <br>
-                    <span style="font-size:0.97em; color:#276fbf;">(Para distância de ${params.d} cm)</span>
-                </div>
-                <div class="fronteira">
-                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#ffbc2a" stroke-width="2"/><path d="M12 6v6l4 2" stroke="#6a4400" stroke-width="2" stroke-linecap="round"/></svg>
-                    Fronteira de Segurança:<br>
-                    <span style="font-size:1.27em; color:#d35400;">${fronteira_m.toFixed(2)} m</span>
-                    <span style="font-size:0.98em; font-weight:400; margin-left:6px;">(para 1,2 cal/cm²)</span>
-                </div>
-                <div style="margin-top:14px; text-align:center; color:#999; font-size:0.95em;">
-                    <b>Nota:</b> Valores baseados na equação IEEE 1584 simplificada.<br>
-                    Consulte sempre as instruções técnicas para projetos reais.
-                </div>
-            `;
-        });
-    </script>
+        <div class="form-group">
+          <label for="gap">Gap entre Condutores (mm)</label>
+          <input type="number" id="gap" class="form-control" placeholder="Ex: 25, 32, 76">
+        </div>
+
+        <div class="form-group">
+          <label for="configuracao">Configuração do Equipamento</label>
+          <select id="configuracao" class="form-control">
+            <option value="vcb">VCB (Vertical Conductor in a Box)</option>
+            <option value="hcb">HCB (Horizontal Conductor in a Box)</option>
+            <option value="voa">VOA (Vertical Conductor in Open Air)</option>
+            <option value="hoa">HOA (Horizontal Conductor in Open Air)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="aterramento">Sistema de Aterramento</label>
+          <select id="aterramento" class="form-control">
+            <option value="solidly">Solidamente Aterrado</option>
+            <option value="ungrounded">Não Aterrado</option>
+            <option value="high_resistance">Alta Resistência</option>
+          </select>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-primary" id="btn-calcular"><span>🧮</span> Calcular</button>
+          <button class="btn btn-secondary" id="btn-limpar">Limpar</button>
+        </div>
+      </div>
+
+      <!-- Painel de Resultados -->
+      <div class="panel">
+        <div class="panel-header">
+          <span style="font-size:1.5rem">🛡️</span><h2>Resultados</h2>
+        </div>
+        <div id="resultados-container">
+          <div class="empty-state">
+            <div class="empty-state-icon">ℹ️</div>
+            <p>Preencha os dados e clique em "Calcular" para ver os resultados</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detalhes dos Cálculos -->
+    <div id="calculation-details" class="panel" style="display:none;">
+      <div class="panel-header">
+        <span style="font-size:1.5rem">📐</span><h2>Detalhes dos Cálculos IEEE 1584-2018</h2>
+      </div>
+      <div id="calculation-steps"></div>
+    </div>
+
+    <!-- Informações Importantes -->
+    <div class="info-section">
+      <div class="panel-header">
+        <span style="font-size:1.5rem">ℹ️</span><h2>Informações Importantes</h2>
+      </div>
+      <div class="info-grid">
+        <div class="info-column">
+          <h4>Categorias de EPI (NFPA 70E)</h4>
+          <ul>
+            <li><strong>Cat 0:</strong> &lt; 1,2 cal/cm² - Roupas normais</li>
+            <li><strong>Cat 1:</strong> 1,2 - 4 cal/cm² - FR básico</li>
+            <li><strong>Cat 2:</strong> 4 - 8 cal/cm² - FR + proteção facial</li>
+            <li><strong>Cat 3:</strong> 8 - 25 cal/cm² - Conjunto FR</li>
+            <li><strong>Cat 4:</strong> 25 - 40 cal/cm² - FR multi-camadas</li>
+          </ul>
+        </div>
+        <div class="info-column">
+          <h4>Distâncias Típicas (NFPA 70E)</h4>
+          <ul>
+            <li><strong>208-240V:</strong> 610 mm</li>
+            <li><strong>480-600V:</strong> 610 mm</li>
+            <li><strong>2,4-4,16kV:</strong> 910 mm</li>
+            <li><strong>13,8kV:</strong> 1220 mm</li>
+            <li><strong>34,5kV:</strong> 1830 mm</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configurações do equipamento (k1 conforme tipo/ambiente — log En)
+    const configuracoes = {
+      vcb: { nome:'VCB (Vertical Conductor in a Box)', k1: -0.555 },
+      hcb: { nome:'HCB (Horizontal Conductor in a Box)', k1: -0.555 },
+      voa: { nome:'VOA (Vertical Conductor in Open Air)', k1: -0.792 },
+      hoa: { nome:'HOA (Horizontal Conductor in Open Air)', k1: -0.792 }
+    };
+
+    // Expoente de distância x (exemplos típicos usados no seu código)
+    const fatoresDistancia = {
+      baixaTensao: { switchgear: 1.473, mcc_panels: 1.641, cables: 2.000, openAir: 2.000 },
+      mediaTensao: { switchgear: 0.973, cables: 2.000, openAir: 2.000 }
+    };
+
+    function validarCamposNumericos(...vals){
+      return vals.every(v => typeof v === 'number' && isFinite(v) && v > 0);
+    }
+
+    function calcular(){
+      // Inputs
+      const V = parseFloat(document.getElementById('tensao').value);
+      const Ibf = parseFloat(document.getElementById('corrente').value);
+      const t  = parseFloat(document.getElementById('tempo').value);
+      const D  = parseFloat(document.getElementById('distancia').value);
+      const G  = parseFloat(document.getElementById('gap').value);
+      const config = document.getElementById('configuracao').value;
+      const aterramento = document.getElementById('aterramento').value;
+
+      if(!validarCamposNumericos(V,Ibf,t,D,G)){
+        alert('Por favor, preencha todos os campos com valores numéricos positivos.');
+        return;
+      }
+
+      const steps = [];
+      // ETAPA 1: Conversões
+      const Vkv = V / 1000;
+      const Ibf_ka = Ibf / 1000;
+      steps.push(`<strong>ETAPA 1: Conversões</strong>`);
+      steps.push(`V = ${V} V = ${Vkv.toFixed(3)} kV`);
+      steps.push(`Ibf = ${Ibf} A = ${Ibf_ka.toFixed(3)} kA`);
+      steps.push(`D = ${D} mm = ${(D/1000).toFixed(3)} m`);
+
+      // ETAPA 2: Corrente de Arco (Ia)
+      let Ia, log_Ia;
+      steps.push(`<br><strong>ETAPA 2: Corrente de Arco (IEEE 1584-2018)</strong>`);
+      if (V < 1000){
+        // Baixa tensão — fórmula dependente de "em caixa" vs "ar livre"
+        const K_aux = (config === 'vcb' || config === 'hcb') ? -0.097 : -0.153;
+        log_Ia = K_aux + 0.662*Math.log10(Ibf_ka) + 0.0966*Vkv + 0.000526*G
+                 + 0.5588*Vkv*Math.log10(Ibf_ka) - 0.00304*G*Math.log10(Ibf_ka);
+        Ia = Math.pow(10, log_Ia);
+        steps.push(`Fórmula para < 1 kV`);
+        steps.push(`<div class="formula">lg(Ia) = K + 0.662·lg(Ibf) + 0.0966·V + 0.000526·G + 0.5588·V·lg(Ibf) − 0.00304·G·lg(Ibf)</div>`);
+        steps.push(`K = ${K_aux} (${(config==='vcb'||config==='hcb')?'em caixa':'ar livre'})`);
+      } else {
+        log_Ia = 0.00402 + 0.983*Math.log10(Ibf_ka);
+        Ia = Math.pow(10, log_Ia);
+        steps.push(`Fórmula para ≥ 1 kV`);
+        steps.push(`<div class="formula">lg(Ia) = 0.00402 + 0.983·lg(Ibf)</div>`);
+      }
+      steps.push(`lg(Ia) = ${log_Ia.toFixed(4)} → Ia = ${Ia.toFixed(3)} kA`);
+
+      // ETAPA 3: Energia normalizada En (J/cm²)
+      steps.push(`<br><strong>ETAPA 3: Energia Incidente Normalizada</strong>`);
+      const k1 = configuracoes[config].k1;
+      let k2;
+      switch (aterramento){
+        case 'solidly': k2 = -0.113; break;
+        case 'ungrounded':
+        case 'high_resistance':
+        default: k2 = 0; break;
+      }
+      const log_En = k1 + k2 + 1.081*Math.log10(Ia) + 0.0011*G;
+      const En = Math.pow(10, log_En); // J/cm²
+      steps.push(`k1 = ${k1} (${(config==='vcb'||config==='hcb')?'em caixa':'ar livre'})`);
+      steps.push(`k2 = ${k2} (${aterramento==='solidly'?'solidamente aterrado':'não aterrado/alta resistência'})`);
+      steps.push(`<div class="formula">lg(En) = k1 + k2 + 1.081·lg(Ia) + 0.0011·G</div>`);
+      steps.push(`lg(En) = ${log_En.toFixed(4)} → En = ${En.toFixed(3)} J/cm²`);
+
+      // ETAPA 4: Cf, x e Energia final E
+      steps.push(`<br><strong>ETAPA 4: Energia Incidente Final</strong>`);
+      const Cf = (V <= 1000) ? 1.5 : 1.0;
+
+      // Determinar x (expoente de distância) conforme seu mapeamento
+      let x;
+      if (V <= 1000){
+        x = (config==='vcb'||config==='hcb') ? fatoresDistancia.baixaTensao.switchgear : fatoresDistancia.baixaTensao.openAir;
+      } else if (V <= 5000){
+        x = (config==='vcb'||config==='hcb') ? fatoresDistancia.mediaTensao.switchgear : fatoresDistancia.mediaTensao.openAir;
+      } else {
+        x = fatoresDistancia.mediaTensao.openAir;
+      }
+
+      const E_J = Cf * En * (t/0.2) * Math.pow(610 / D, x); // J/cm²
+      const E_cal = E_J * 0.2388; // cal/cm²
+      steps.push(`Cf = ${Cf} (faixa de tensão ${V<=1000?'≤ 1 kV':'> 1 kV'})`);
+      steps.push(`x = ${x} (expoente de distância)`);
+      steps.push(`<div class="formula">E = Cf · En · (t/0,2) · (610/D)^x</div>`);
+      steps.push(`E = ${E_J.toFixed(3)} J/cm² → ${E_cal.toFixed(2)} cal/cm²`);
+
+      if (!isFinite(E_cal) || E_cal < 0){ alert('Erro no cálculo. Verifique os valores.'); return; }
+
+      // ETAPA 5: Fronteira de segurança (1,2 cal/cm² = 5,0 J/cm²)
+      // Reorganizando: D_fp = 610 / ( (E_target / (Cf*En*(t/0.2)))^(1/x) )
+      const E_target_J = 5.0; // 1,2 cal/cm²
+      const base = E_target_J / (Cf * En * (t/0.2));
+      let D_fp_mm = NaN, D_fp_m = NaN;
+      if (base > 0){
+        D_fp_mm = 610 / Math.pow(base, 1/x);
+        D_fp_m = D_fp_mm / 1000;
+      }
+      steps.push(`<br><strong>ETAPA 5: Fronteira de Segurança (1,2 cal/cm²)</strong>`);
+      steps.push(`<div class="formula">D_fp = 610 / (E_alvo / (Cf·En·(t/0,2)))^(1/x), com E_alvo = 5,0 J/cm²</div>`);
+      steps.push(`D_fp = ${isFinite(D_fp_mm)?D_fp_mm.toFixed(1):'—'} mm = ${isFinite(D_fp_m)?D_fp_m.toFixed(2):'—'} m`);
+
+      // EPI recomendado
+      let epi;
+      if (E_cal < 1.2) epi = 'Categoria 0 - Roupas de trabalho normais';
+      else if (E_cal < 4) epi = 'Categoria 1 - FR básico, capacete, óculos';
+      else if (E_cal < 8) epi = 'Categoria 2 - FR + proteção facial';
+      else if (E_cal < 25) epi = 'Categoria 3 - Conjunto FR completo';
+      else if (E_cal < 40) epi = 'Categoria 4 - FR multi-camadas';
+      else epi = 'PERIGO EXTREMO - Considere desenergizar o equipamento';
+
+      // Exibir resultados
+      mostrarResultados({
+        energiaCal: E_cal.toFixed(2),
+        energiaJ: E_J.toFixed(2),
+        correnteArco: Ia.toFixed(2),
+        tensao: V,
+        tempo: t,
+        distancia: D,
+        gap: G,
+        configuracao: configuracoes[config].nome,
+        fronteiraM: isFinite(D_fp_m) ? D_fp_m.toFixed(2) : '—'
+      }, epi);
+
+      // Exibir passos
+      mostrarCalculationDetails(steps);
+    }
+
+    function mostrarResultados(resultado, epiRequerido){
+      const container = document.getElementById('resultados-container');
+      const isPerigoso = parseFloat(resultado.energiaCal) > 40;
+      const warningHTML = `
+        <div class="warning-section">
+          <div class="warning-header"><span style="font-size:1.5rem">⚠️</span><h4>ATENÇÃO - PERIGO EXTREMO</h4></div>
+          <p>Energia incidente muito alta! Considere desenergizar o equipamento ou implementar medidas de proteção adicionais.</p>
+        </div>`;
+
+      container.innerHTML = `
+        <div class="result-main">
+          <div class="result-value">${resultado.energiaCal} cal/cm²</div>
+          <div class="result-label">Energia Incidente</div>
+          <div style="font-size:.9rem;margin-top:5px;opacity:.7">(${resultado.energiaJ} J/cm²)</div>
+        </div>
+
+        <div class="result-grid">
+          <div class="result-item">
+            <div class="result-item-label">Corrente de Arco</div>
+            <div class="result-item-value">${resultado.correnteArco} kA</div>
+          </div>
+          <div class="result-item">
+            <div class="result-item-label">Tensão</div>
+            <div class="result-item-value">${resultado.tensao} V</div>
+          </div>
+          <div class="result-item">
+            <div class="result-item-label">Tempo de Arco</div>
+            <div class="result-item-value">${resultado.tempo} s</div>
+          </div>
+          <div class="result-item">
+            <div class="result-item-label">Distância</div>
+            <div class="result-item-value">${resultado.distancia} mm</div>
+          </div>
+
+          <!-- Fronteira de Segurança em destaque, ocupando a linha inteira -->
+          <div class="result-item" style="grid-column:1 / -1; border:1px solid rgba(255,215,0,.5); background:rgba(255,215,0,.15)">
+            <div class="result-item-label">Fronteira de Segurança (1,2 cal/cm²)</div>
+            <div class="result-item-value" style="font-size:1.6rem">${resultado.fronteiraM} m</div>
+          </div>
+        </div>
+
+        <div class="epi-section">
+          <div class="epi-header"><span style="font-size:1.2rem">⚠️</span><h4>EPI Requerido</h4></div>
+          <div class="epi-description">${epiRequerido}</div>
+        </div>
+
+        ${isPerigoso ? warningHTML : '' }
+      `;
+    }
+
+    function mostrarCalculationDetails(steps){
+      const container = document.getElementById('calculation-details');
+      const stepsContainer = document.getElementById('calculation-steps');
+      container.style.display = 'block';
+      stepsContainer.innerHTML = `
+        <div class="calculation-details">
+          ${steps.map(s=>`<div class="calculation-step">${s}</div>`).join('')}
+        </div>`;
+    }
+
+    function limpar(){
+      // Limpa campos
+      ['tensao','corrente','tempo','distancia','gap'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('configuracao').selectedIndex = 0;
+      document.getElementById('aterramento').selectedIndex = 0;
+
+      // Estado inicial de resultados
+      document.getElementById('resultados-container').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">ℹ️</div>
+          <p>Preencha os dados e clique em "Calcular" para ver os resultados</p>
+        </div>`;
+      // Esconde detalhes
+      const det = document.getElementById('calculation-details');
+      det.style.display = 'none';
+      document.getElementById('calculation-steps').innerHTML = '';
+    }
+
+    // Handlers
+    document.getElementById('btn-calcular').addEventListener('click', (e)=>{ e.preventDefault(); calcular(); });
+    document.getElementById('btn-limpar').addEventListener('click', (e)=>{ e.preventDefault(); limpar(); });
+  </script>
 </body>
 </html>
